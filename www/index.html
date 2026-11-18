@@ -4,7 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Demir Kağnı — Prototip</title>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:"Rubik";font-weight:500;font-display:block;src:url(fonts/rubik-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Rubik";font-weight:500;font-display:block;src:url(fonts/rubik-latin-ext-500-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Rubik";font-weight:800;font-display:block;src:url(fonts/rubik-latin-800-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Rubik";font-weight:800;font-display:block;src:url(fonts/rubik-latin-ext-800-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Bungee";font-weight:400;font-display:block;src:url(fonts/bungee-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Bungee";font-weight:400;font-display:block;src:url(fonts/bungee-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+</style>
 <style>
 html,body{margin:0;height:100%;background:#0b0604;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #c{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
@@ -17,10 +24,10 @@ html,body{margin:0;height:100%;background:#0b0604;overflow:hidden;touch-action:n
 <body>
 <canvas id="c"></canvas>
 <div id="pad">
-  <div class="b" data-k="left"  style="left:12px;bottom:52px;width:56px;height:56px">◀</div>
-  <div class="b" data-k="right" style="left:108px;bottom:52px;width:56px;height:56px">▶</div>
-  <div class="b" data-k="up"    style="left:62px;bottom:106px;width:52px;height:52px">▲</div>
-  <div class="b" data-k="down"  style="left:62px;bottom:6px;width:52px;height:52px">▼</div>
+  <div class="b" data-k="left"  style="left:12px;bottom:52px;width:56px;height:56px">◀︎</div>
+  <div class="b" data-k="right" style="left:108px;bottom:52px;width:56px;height:56px">▶︎</div>
+  <div class="b" data-k="up"    style="left:62px;bottom:106px;width:52px;height:52px">▲︎</div>
+  <div class="b" data-k="down"  style="left:62px;bottom:6px;width:52px;height:52px">▼︎</div>
   <div class="b" data-k="jump"  style="right:14px;bottom:40px;width:68px;height:68px" id="bJ">ZIPLA</div>
   <div class="b" data-k="fire"  style="right:92px;bottom:14px;width:68px;height:68px" id="bF">ATEŞ</div>
   <div class="b" data-k="bomb"  style="right:58px;bottom:116px;width:54px;height:54px" id="bB">BOMBA</div>
@@ -50,13 +57,13 @@ function wrap(s,n){const ws=s.split(' ');const out=[];let cur='';for(const w of 
 const L={
 tr:{sub:'Prototip · 2 Görev',start:'BAŞLA',made:'Bir Mr. Anduv! yapımıdır.',choose:'KAHRAMANINI SEÇ',fire:'ATEŞ',jump:'ZIPLA',bomb:'BOMBA',score:'PUAN',esir:'ESİR',over:'OYUN BİTTİ',retry:'TEKRAR',menu:'MENÜ',again:'TEKRAR OYNA',cont:'DEVAM',win:'GÖREV {n} TAMAM!',nextm:'GÖREV {n} →',mnames:['KÖY YOLU','KARLI GEÇİT'],bosses:['DEMİR TEPEGÖZ','DEMİR EVREN'],warns:['DİKKAT! DEMİR TEPEGÖZ','DİKKAT! DEMİR EVREN'],kirat:'KIRAT',music:'Müzik',saved:'Kurtarılan esir',goal:'Büyük hedef: 1923 esir',next:'Sırada: Görev 3 ve 1923 bölümlük Seferberlik modu',mission:'GÖREV',getin:'BİN!',cart:'KAĞNI TOPU',skip:'C: atla',
 thanks:['Sağ ol yiğidim!','Allah razı olsun!','Yolun açık olsun!','Al bunu, işine yarar!'],hoca:'Eşeğimi gören oldu mu?',
-keys:'Oklar: hareket · Z: ateş · X: zıpla · C: bomba · ↑: yukarı nişan · ↓: çömel',vhint:'İnmek: ▼ + ZIPLA · Top/bomba: BOMBA',tap:'Kahramanına dokun',
+keys:'Oklar: hareket · Z: ateş · X: zıpla · C: bomba · ↑: yukarı nişan · ↓: çömel',vhint:'İnmek: ▼︎ + ZIPLA · Top/bomba: BOMBA',tap:'Kahramanına dokun',
 w:{pistol:'TABANCA',A:'AĞIR MAKİNELİ!',P:'POMPALI!',L:'ALEV!'},items:{S:'SİMİT',C:'ÇAY',B:'BOMBA +10'},
 intro2:[['Hacivat','Karagözüm, köyleri kurtardık ama Tepegöz pes etmemiş; karlı geçide bir Demir Evren salmış!'],['Karagöz','Evren mi? Ben o demir yılanı düğüm yapar, kağnının arkasına bağlarım!'],['Hacivat','Kağnı karda batar, Karagözüm. Köroğlu, Kırat\'ı bize emanet etmiş; geçidin başında bekliyor!']],
 intro:[['Hacivat','Karagözüm, duydun mu? Demir Tepegöz yine köy yollarını basmış, garibanları zincire vurmuş!'],['Karagöz','O tek gözlüye bir göz daha açmazsam bana da Karagöz demesinler, Hacivat!'],['Hacivat','Yalnız değiliz; Demir Kağnı da yola çıktı. Haydi yiğitler, perde açılsın!']]},
 en:{sub:'Prototype · Mission 1: Village Road',start:'START',made:'Bir Mr. Anduv! yapımıdır.',choose:'CHOOSE YOUR HERO',fire:'FIRE',jump:'JUMP',bomb:'BOMB',score:'SCORE',esir:'RESCUED',over:'GAME OVER',retry:'RETRY',menu:'MENU',again:'PLAY AGAIN',cont:'CONTINUE',win:'MISSION {n} COMPLETE!',nextm:'MISSION {n} →',mnames:['VILLAGE ROAD','SNOWY PASS'],bosses:['IRON CYCLOPS','IRON EVREN'],warns:['WARNING! IRON CYCLOPS','WARNING! IRON EVREN'],kirat:'KIRAT',music:'Music',saved:'Prisoners rescued',goal:'Grand goal: 1923 prisoners',next:'Next: Mission 3 and the 1923-stage Mobilization mode',mission:'MISSION',getin:'GET IN!',cart:'CART CANNON',skip:'C: skip',
 thanks:['Thank you, brave one!','Bless you!','Safe travels!','Take this, it will help!'],hoca:'Has anyone seen my donkey?',
-keys:'Arrows: move · Z: fire · X: jump · C: bomb · ↑: aim up · ↓: crouch',vhint:'Dismount: ▼ + JUMP · Cannon/bomb: BOMB',tap:'Tap your hero',
+keys:'Arrows: move · Z: fire · X: jump · C: bomb · ↑: aim up · ↓: crouch',vhint:'Dismount: ▼︎ + JUMP · Cannon/bomb: BOMB',tap:'Tap your hero',
 w:{pistol:'PISTOL',A:'HEAVY MACHINE GUN!',P:'SHOTGUN!',L:'FLAME!'},items:{S:'SIMIT',C:'TEA',B:'BOMBS +10'},
 intro2:[['Hacivat','Karagöz, we freed the villages, but the Cyclops hasn\'t given up; he has unleashed an Iron Evren on the snowy pass!'],['Karagöz','An Evren? I\'ll tie that iron serpent in a knot and hitch it to the cart!'],['Hacivat','The cart would sink in the snow, my friend. Köroğlu has lent us Kırat; he waits at the head of the pass!']],
 intro:[['Hacivat','Karagöz my friend, have you heard? The Iron Cyclops is raiding the village roads again, chaining up the poor folk!'],['Karagöz','If I don\'t open a second eye on that one-eyed brute, don\'t call me Karagöz, Hacivat!'],['Hacivat','We are not alone; the Iron Ox-Cart is on the road too. Come on, heroes, raise the curtain!']]}};
@@ -800,7 +807,7 @@ function drawTitle(){tcam=(tcam+0.45)%3300;const cx=tcam;scene(cx);
  motes(cx);fgTufts(cx);post();g.fillStyle=lg(0,0,0,115,['rgba(15,6,0,0.65)','rgba(15,6,0,0)']);g.fillRect(0,0,W,115);
  logo(W/2,42);T(S('sub'),W/2,66,6.5,'#ffe9c0','center','#2a1006');
  btns=[{x:W/2-52,y:80,w:104,h:24,id:'start',label:S('start')}];drawBtn(btns[0],fr%50<40);
- rrect(W/2-92,H-21,184,14,7);g.fillStyle='rgba(15,6,0,0.6)';g.fill();T(S('made'),W/2,H-14,7,'#ffe9c0','center','#2a1006');T('v0.3.1',W-6,H-6,5,'#ddd','right','#000');}
+ rrect(W/2-92,H-21,184,14,7);g.fillStyle='rgba(15,6,0,0.6)';g.fill();T(S('made'),W/2,H-14,7,'#ffe9c0','center','#2a1006');T('v0.4.0',W-6,H-6,5,'#ddd','right','#000');}
 function drawSelect(){g.fillStyle=rg(W/2,H/2,10,260,['#3e1e0c','#120804']);g.fillRect(0,0,W,H);
  for(let x=0;x<W;x+=8){poly([x,0,x+4,4,x+8,0]);g.fillStyle='#8a1e12';g.fill();poly([x,H,x+4,H-4,x+8,H]);g.fill();poly([x+2,0,x+4,2,x+6,0]);g.fillStyle='#f3d58a';g.fill();poly([x+2,H,x+4,H-2,x+6,H]);g.fill();}
  T(S('choose'),W/2,17,9.5,'#f3d58a','center','#2a1006','b');btns=[];
@@ -828,7 +835,7 @@ function drawIntro(){g.fillStyle=lg(0,0,0,H,['#1a0c06','#0a0503']);g.fillRect(0,
  g.fillStyle=rg(192,92,8,200,[`rgba(255,246,214,${fl})`,'#f0c070','#b8702a']);g.fillRect(36,17,312,137);g.strokeStyle='rgba(120,70,20,0.06)';g.lineWidth=0.4;for(let x=36;x<348;x+=3){g.beginPath();g.moveTo(x,17);g.lineTo(x,154);g.stroke();}
  const IN=S(MISSIONS[mi].intro),ln0=IN[Math.min(introI,IN.length-1)];shadowFig(124,'h',ln0[0]==='Hacivat');shadowFig(262,'k',ln0[0]==='Karagöz');glow(192,172,90,'255,170,80',0.32*fl);
  rrect(12,166,360,46,4);fs('rgba(10,5,2,0.92)','#d79a4a',0.6);T(ln0[0],22,174,6.5,'#f3d58a','left','#1a0a04','b');
- wrap(ln0[1].slice(0,introC|0),88).forEach((l,i)=>T(l,22,186+i*9,6.2,'#fff','left',null));if(introC>=ln0[1].length&&fr%30<20)T('▶',362,204,6,'#f3d58a','center',null);if(!isTouch)T(S('skip'),W-18,174,5,'#8a7a6a','right',null);}
+ wrap(ln0[1].slice(0,introC|0),88).forEach((l,i)=>T(l,22,186+i*9,6.2,'#fff','left',null));if(introC>=ln0[1].length&&fr%30<20)T('▶︎',362,204,6,'#f3d58a','center',null);if(!isTouch)T(S('skip'),W-18,174,5,'#8a7a6a','right',null);}
 function drawCard(){g.fillStyle=rg(W/2,H/2,10,240,['#2e160a','#0a0503']);g.fillRect(0,0,W,H);const a=Math.min(1,cardT/30);
  g.save();g.globalAlpha=0.22*a;g.translate(W/2-55,120);g.scale(2.5,2.5);if(MISSIONS[mi].veh.kind==='kirat')drawKirat(4,0,1,cardT*0.2,false,true);else drawKagni(0,0,1,cardT*0.05,false,false);g.restore();
  T(S('mission')+' '+(mi+1),W/2,72,9,'#d79a4a','center',null,'b');T(S('mnames')[mi],W/2,96,22,MISSIONS[mi].theme==='kar'?'#dfeaff':'#f3d58a','center','#2a1006','b');if(cardT>50)T((mi+1)+' / 1923',W/2,122,6,'#b09a80','center',null,'b');}
@@ -845,9 +852,10 @@ function draw(){g.setTransform(BS,0,0,BS,0,0);g.globalAlpha=1;g.globalCompositeO
 let last=performance.now(),acc=0;
 function frame(now){acc+=Math.min(100,now-last);last=now;let n=0;while(acc>=1000/60&&n<4){update();acc-=1000/60;n++;}if(n===4)acc=0;draw();requestAnimationFrame(frame);}
 parts=[];applyLang();
-if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('20px Bungee'),document.fonts.load('800 20px Rubik')]).then(()=>{HCS={};SIGN=null;}).catch(()=>{});}
+if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('20px Bungee','ıİşŞğĞçÇöÖüÜ'),document.fonts.load('800 20px Rubik','ıİşŞğĞçÇöÖüÜ'),document.fonts.load('500 20px Rubik','ıİşŞğĞçÇöÖüÜ')]).then(()=>{HCS={};SIGN=null;}).catch(()=>{});}
 requestAnimationFrame(frame);
 window.__dbg={loadMission,get mi(){return mi},get state(){return state},set state(v){state=v},get P(){return P},get B(){return B},get cam(){return cam},menuAct,newGame,KB,startBoss,get V(){return V},get enemies(){return enemies}};
 </script>
+<script src="kabuk.js"></script>
 </body>
 </html>

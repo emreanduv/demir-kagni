@@ -1,0 +1,113 @@
+name: iOS (App Store Connect / TestFlight)
+# Elle (workflow_dispatch) ya da main'deki bir işlemeye "ios-v1.2.3" etiketi konunca çalışır.
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Sürüm adı (ör. 0.4.0)"
+        default: "0.4.0"
+  push:
+    tags: ['ios-v*']
+permissions:
+  contents: write
+env:
+  ASC_KEY_ID: DJSHKK6T3P
+  ASC_ISSUER_ID: f4943ef8-df6f-42c8-a561-58554097ea35
+  APPLE_TEAM_ID: 4UFRQ97N4C
+  BUNDLE: com.anduv.demirkagni
+  APP_ADI: "Demir Kağnı"
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Sürüm
+        id: s
+        run: |
+          V="${{ inputs.version_name }}"; [ -z "$V" ] && V="${GITHUB_REF_NAME#ios-v}"
+          echo "v=$V" >> $GITHUB_OUTPUT; echo "Sürüm: $V"
+      - name: Yayın öncesi kontrol (main, özellikler eksiksiz, sürüm geri gitmiyor)
+        env: { SURUM: "${{ steps.s.outputs.v }}" }
+        run: bash araclar/yayin-kontrol.sh
+      - name: Destek adresi (Bize yaz)
+        env: { D: "${{ vars.DESTEK_EPOSTA }}" }
+        run: |
+          if [ -n "$D" ]; then sed -i '' "s|__DESTEK_EPOSTA__|$D|" www/kabuk.js; echo "✓ destek adresi yazıldı"; else echo "::warning::DESTEK_EPOSTA değişkeni yok; Bize yaz alıcısız açılır"; fi
+      - name: Paket kimliği ve App Store kaydı
+        env: { P8: "${{ secrets.ASC_KEY_P8 }}" }
+        run: |
+          python3 -m pip install -q --break-system-packages pyjwt cryptography requests 2>/dev/null || python3 -m pip install -q pyjwt cryptography requests
+          python3 - <<'PY' 2>&1 | tee $RUNNER_TEMP/kayit.log
+          import jwt, time, os, requests
+          tok = jwt.encode({'iss': os.environ['ASC_ISSUER_ID'], 'iat': int(time.time()), 'exp': int(time.time()) + 900, 'aud': 'appstoreconnect-v1'},
+                           os.environ['P8'], algorithm='ES256', headers={'kid': os.environ['ASC_KEY_ID']})
+          H = {'Authorization': 'Bearer ' + tok}; B = 'https://api.appstoreconnect.apple.com'; bid = os.environ['BUNDLE']
+          r = requests.get(B + '/v1/bundleIds', params={'filter[identifier]': bid}, headers=H).json()
+          if not [d for d in r.get('data', []) if d['attributes']['identifier'] == bid]:
+              c = requests.post(B + '/v1/bundleIds', headers=H, json={'data': {'type': 'bundleIds', 'attributes': {'identifier': bid, 'name': 'Demir Kagni', 'platform': 'IOS'}}})
+              print('Paket kimliği kaydı:', c.status_code, c.text[:300])
+          else:
+              print('✓ Paket kimliği var:', bid)
+          a = requests.get(B + '/v1/apps', params={'filter[bundleId]': bid}, headers=H).json()
+          if not a.get('data'):
+              print(f"::error::App Store Connect'te {bid} paketli uygulama kaydı yok. Emre: App Store Connect > Uygulamalar > + Yeni Uygulama: ad '{os.environ['APP_ADI']}', paket kimliği {bid}, SKU demirkagni. Sonra bu iş akışını yeniden çalıştır.")
+              raise SystemExit(1)
+          print('✓ Uygulama kaydı var:', a['data'][0]['attributes']['name'])
+          PY
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Xcode 26 seç
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$X" ]; then sudo xcode-select -s "$X"; fi
+          xcodebuild -version
+      - run: npm ci
+      - run: npx cap sync ios
+      - name: App Store Connect anahtarı
+        env: { P8: "${{ secrets.ASC_KEY_P8 }}" }
+        run: |
+          mkdir -p ~/private_keys
+          printf '%s' "$P8" > ~/private_keys/AuthKey_${{ env.ASC_KEY_ID }}.p8
+      - name: Arşivle
+        working-directory: ios/App
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/DemirKagni.xcarchive \
+            DEVELOPMENT_TEAM=${{ env.APPLE_TEAM_ID }} CODE_SIGN_STYLE=Automatic \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            MARKETING_VERSION=${{ steps.s.outputs.v }} CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            archive > $RUNNER_TEMP/arsiv.log 2>&1 || {
+              grep -E 'error:|error |No Account|No profiles|requires a provisioning|bundle identifier' $RUNNER_TEMP/arsiv.log | sort -u | head -15 | while IFS= read -r l; do echo "::error::$l"; done
+              tail -5 $RUNNER_TEMP/arsiv.log | while IFS= read -r l; do echo "::warning::$l"; done
+              exit 1; }
+      - name: App Store Connect'e yükle (TestFlight)
+        run: |
+          cat > $RUNNER_TEMP/export.plist <<PL
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${{ env.APPLE_TEAM_ID }}</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          PL
+          xcodebuild -exportArchive -archivePath $RUNNER_TEMP/DemirKagni.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/export.plist -exportPath $RUNNER_TEMP/export \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ env.ASC_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ env.ASC_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ env.ASC_ISSUER_ID }} > $RUNNER_TEMP/export.log 2>&1 || {
+              grep -iE 'error|fail|No App|not found|provision|certificate' $RUNNER_TEMP/export.log | sort -u | head -20 | while IFS= read -r l; do echo "::error::$l"; done
+              tail -8 $RUNNER_TEMP/export.log | while IFS= read -r l; do echo "::warning::$l"; done
+              exit 1; }
+          tail -3 $RUNNER_TEMP/export.log
+      - name: Sonucu yaz (durum-ios dalı)
+        if: always()
+        run: |
+          mkdir -p $RUNNER_TEMP/d && cd $RUNNER_TEMP/d && git init -q
+          echo "${{ job.status }} · ${{ steps.s.outputs.v }} · run ${{ github.run_number }} · $(date -u +%FT%TZ)" > sonuc.txt
+          cp $RUNNER_TEMP/kayit.log $RUNNER_TEMP/arsiv.log $RUNNER_TEMP/export.log . 2>/dev/null || true
+          git add -A && git -c user.name=gha -c user.email=gha@x commit -qm sonuc
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:durum-ios

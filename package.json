@@ -1,0 +1,22 @@
+{
+  "name": "demir-kagni",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demir Kağnı - yandan kaydırmalı aksiyon oyunu (iOS + Android + Steam + Meta Quest)",
+  "scripts": {
+    "serve": "npx http-server www -p 8772 -c-1",
+    "sync": "npx cap sync",
+    "ios": "npx cap open ios",
+    "android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor-community/in-app-review": "^8.0.0",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/share": "^8.0.3",
+    "@capgo/native-purchases": "^8.9.16"
+  },
+  "devDependencies": {}
+}
