@@ -2,6 +2,9 @@ name: TestFlight iç test grubu
 # Derleme işlendikten sonra "Ekip" iç test grubunu kurar (bütün derlemeler), hesaptaki App Store Connect kullanıcılarını iç testçi yapar.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/testflight-ekip.yml', 'store/EKIP']
   workflow_run:
     workflows: ["iOS (App Store Connect / TestFlight)"]
     types: [completed]
@@ -13,7 +16,7 @@ env:
   BUNDLE: com.anduv.demirkagni
 jobs:
   ekip:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Grup ve testçiler
