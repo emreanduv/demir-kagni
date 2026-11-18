@@ -1,5 +1,5 @@
 name: iOS (App Store Connect / TestFlight)
-# Elle (workflow_dispatch) ya da main'deki bir işlemeye "ios-v1.2.3" etiketi konunca çalışır.
+# Elle (workflow_dispatch) ya da main'de store/TESTFLIGHT dosyasındaki sürüm değişince çalışır (dosyanın ilk satırı: sürüm).
 on:
   workflow_dispatch:
     inputs:
@@ -7,7 +7,8 @@ on:
         description: "Sürüm adı (ör. 0.4.0)"
         default: "0.4.0"
   push:
-    tags: ['ios-v*']
+    branches: [main]
+    paths: ['store/TESTFLIGHT']
 permissions:
   contents: write
 env:
@@ -25,7 +26,7 @@ jobs:
       - name: Sürüm
         id: s
         run: |
-          V="${{ inputs.version_name }}"; [ -z "$V" ] && V="${GITHUB_REF_NAME#ios-v}"
+          V="${{ inputs.version_name }}"; [ -z "$V" ] && V="$(head -1 store/TESTFLIGHT | tr -d '[:space:]')"
           echo "v=$V" >> $GITHUB_OUTPUT; echo "Sürüm: $V"
       - name: Yayın öncesi kontrol (main, özellikler eksiksiz, sürüm geri gitmiyor)
         env: { SURUM: "${{ steps.s.outputs.v }}" }
