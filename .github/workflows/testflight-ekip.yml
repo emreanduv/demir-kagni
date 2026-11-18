@@ -1,0 +1,53 @@
+name: TestFlight iç test grubu
+# Derleme işlendikten sonra "Ekip" iç test grubunu kurar (bütün derlemeler), hesaptaki App Store Connect kullanıcılarını iç testçi yapar.
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["iOS (App Store Connect / TestFlight)"]
+    types: [completed]
+permissions:
+  contents: write
+env:
+  ASC_KEY_ID: DJSHKK6T3P
+  ASC_ISSUER_ID: f4943ef8-df6f-42c8-a561-58554097ea35
+  BUNDLE: com.anduv.demirkagni
+jobs:
+  ekip:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Grup ve testçiler
+        env: { P8: "${{ secrets.ASC_KEY_P8 }}" }
+        run: |
+          python3 -m pip install -q --break-system-packages pyjwt cryptography requests
+          python3 - <<'PY' 2>&1 | tee ekip.log
+          import jwt, time, os, requests
+          def H():
+              t = jwt.encode({'iss': os.environ['ASC_ISSUER_ID'], 'iat': int(time.time()), 'exp': int(time.time()) + 900, 'aud': 'appstoreconnect-v1'}, os.environ['P8'], algorithm='ES256', headers={'kid': os.environ['ASC_KEY_ID']})
+              return {'Authorization': 'Bearer ' + t}
+          B = 'https://api.appstoreconnect.apple.com'
+          app = requests.get(B + '/v1/apps', params={'filter[bundleId]': os.environ['BUNDLE']}, headers=H()).json()['data'][0]['id']
+          for i in range(40):
+              bl = requests.get(B + '/v1/builds', params={'filter[app]': app, 'sort': '-uploadedDate', 'limit': 1}, headers=H()).json().get('data', [])
+              st = bl[0]['attributes']['processingState'] if bl else 'YOK'
+              print('derleme:', bl[0]['attributes']['version'] if bl else '-', st)
+              if st == 'VALID': break
+              time.sleep(30)
+          gs = requests.get(B + f'/v1/apps/{app}/betaGroups', headers=H()).json().get('data', [])
+          g = next((x for x in gs if x['attributes'].get('isInternalGroup')), None)
+          if not g:
+              r = requests.post(B + '/v1/betaGroups', headers=H(), json={'data': {'type': 'betaGroups', 'attributes': {'name': 'Ekip', 'isInternalGroup': True, 'hasAccessToAllBuilds': True}, 'relationships': {'app': {'data': {'type': 'apps', 'id': app}}}}})
+              print('grup:', r.status_code, r.text[:200]); g = r.json().get('data')
+          else: print('✓ iç grup var:', g['attributes']['name'])
+          us = requests.get(B + '/v1/users', params={'limit': 50}, headers=H()).json().get('data', [])
+          print('ekip kullanıcısı:', len(us))
+          for u in us:
+              a = u['attributes']
+              r = requests.post(B + '/v1/betaTesters', headers=H(), json={'data': {'type': 'betaTesters', 'attributes': {'email': a['username'], 'firstName': a.get('firstName') or '', 'lastName': a.get('lastName') or ''}, 'relationships': {'betaGroups': {'data': [{'type': 'betaGroups', 'id': g['id']}]}}}})
+              print('testçi', a.get('firstName'), r.status_code, '' if r.ok else r.text[:160])
+          PY
+      - name: Sonucu yaz
+        if: always()
+        run: |
+          mkdir d && cp ekip.log d/ 2>/dev/null; cd d && git init -q && git add -A && git -c user.name=gha -c user.email=gha@x commit -qm ekip
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:durum-ekip
