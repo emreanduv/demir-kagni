@@ -1,0 +1,13 @@
+derleme: - YOK
+derleme: - YOK
+derleme: 2 VALID
+grup: 201 {
+  "data" : {
+    "type" : "betaGroups",
+    "id" : "65cddec9-818d-4004-baed-9fc93bc92ee4",
+    "attributes" : {
+      "publicLinkLimit" : null,
+      "iosBuildsAvailableForAppleSiliconMac" : true,
+ 
+ekip kullanıcısı: 1
+testçi Emre 201 
